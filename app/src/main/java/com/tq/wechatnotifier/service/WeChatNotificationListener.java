@@ -26,6 +26,7 @@ public class WeChatNotificationListener extends NotificationListenerService {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.i(TAG, "NotificationListener onCreate");
         prefsManager = new PrefsManager(this);
     }
 
@@ -36,15 +37,34 @@ public class WeChatNotificationListener extends NotificationListenerService {
         prefsManager = new PrefsManager(this);
 
         // Start keep-alive service
-        Intent intent = new Intent(this, KeepAliveService.class);
-        startForegroundService(intent);
+        try {
+            Intent intent = new Intent(this, KeepAliveService.class);
+            startForegroundService(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to start KeepAliveService", e);
+        }
     }
 
     @Override
     public void onListenerDisconnected() {
         super.onListenerDisconnected();
         Log.w(TAG, "NotificationListener disconnected, requesting rebind");
-        requestRebind(new ComponentName(this, WeChatNotificationListener.class));
+        try {
+            requestRebind(new ComponentName(this, WeChatNotificationListener.class));
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to request rebind", e);
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.w(TAG, "NotificationListener destroyed, requesting rebind");
+        try {
+            requestRebind(new ComponentName(this, WeChatNotificationListener.class));
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to request rebind on destroy", e);
+        }
+        super.onDestroy();
     }
 
     @Override

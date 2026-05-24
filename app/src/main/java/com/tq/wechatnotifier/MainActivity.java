@@ -1,9 +1,12 @@
 package com.tq.wechatnotifier;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.widget.TextView;
+
+import android.service.notification.NotificationListenerService;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -40,6 +43,17 @@ public class MainActivity extends AppCompatActivity {
         // Permission status
         permissionStatus = findViewById(R.id.text_permission_status);
 
+        // Auto-restart service if enabled
+        if (prefsManager.isServiceEnabled() && isNotificationListenerEnabled()) {
+            startKeepAliveService();
+            try {
+                NotificationListenerService.requestRebind(
+                        new ComponentName(this, com.tq.wechatnotifier.service.WeChatNotificationListener.class));
+            } catch (Exception e) {
+                // ignore
+            }
+        }
+
         // Service switch
         serviceSwitch = findViewById(R.id.switch_service);
         serviceSwitch.setChecked(prefsManager.isServiceEnabled());
@@ -52,6 +66,13 @@ public class MainActivity extends AppCompatActivity {
             prefsManager.setServiceEnabled(isChecked);
             if (isChecked) {
                 startKeepAliveService();
+                // Force rebind NotificationListenerService
+                try {
+                    NotificationListenerService.requestRebind(
+                            new ComponentName(MainActivity.this, com.tq.wechatnotifier.service.WeChatNotificationListener.class));
+                } catch (Exception e) {
+                    // ignore
+                }
             } else {
                 stopService(new Intent(this, KeepAliveService.class));
             }
