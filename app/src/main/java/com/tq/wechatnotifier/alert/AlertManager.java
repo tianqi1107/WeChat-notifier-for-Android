@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.VibrationEffect;
@@ -23,6 +24,20 @@ public class AlertManager {
     private static void playRingtone(Context context) {
         stopRingtone();
 
+        // Get system alarm ringtone
+        Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        if (alarmUri == null) {
+            alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        }
+        if (alarmUri == null) {
+            alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        }
+
+        if (alarmUri == null) {
+            Log.e(TAG, "No system ringtone available");
+            return;
+        }
+
         mediaPlayer = new MediaPlayer();
 
         AudioAttributes attrs = new AudioAttributes.Builder()
@@ -33,26 +48,7 @@ public class AlertManager {
         mediaPlayer.setAudioAttributes(attrs);
 
         try {
-            // Try custom sound first, fall back to system alarm
-            Uri soundUri = Uri.parse("android.resource://" + context.getPackageName() + "/raw/alert_sound");
-            mediaPlayer.setDataSource(context, soundUri);
-        } catch (Exception e) {
-            Log.w(TAG, "Custom sound not found, using system alarm ringtone");
-            Uri defaultAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
-            if (defaultAlarm == null) {
-                defaultAlarm = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            }
-            try {
-                mediaPlayer.setDataSource(context, defaultAlarm);
-            } catch (Exception e2) {
-                Log.e(TAG, "Failed to set any sound source", e2);
-                mediaPlayer.release();
-                mediaPlayer = null;
-                return;
-            }
-        }
-
-        try {
+            mediaPlayer.setDataSource(context, alarmUri);
             mediaPlayer.prepare();
             mediaPlayer.start();
             mediaPlayer.setOnCompletionListener(mp -> {
@@ -61,9 +57,12 @@ public class AlertManager {
                     mediaPlayer = null;
                 }
             });
+            Log.i(TAG, "Playing alarm ringtone");
         } catch (Exception e) {
-            Log.e(TAG, "Failed to play alert sound", e);
-            mediaPlayer.release();
+            Log.e(TAG, "Failed to play alarm ringtone", e);
+            try {
+                mediaPlayer.release();
+            } catch (Exception ignored) {}
             mediaPlayer = null;
         }
     }
