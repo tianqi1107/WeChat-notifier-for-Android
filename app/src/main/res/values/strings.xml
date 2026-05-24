@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">微信通知提醒</string>
+    <string name="service_switch">启用监听</string>
+    <string name="time_period_switch">仅在指定时间段内生效</string>
+    <string name="whitelist_button">管理特别关心</string>
+    <string name="battery_settings">电池优化设置</string>
+    <string name="notification_permission_hint">请授予通知监听权限</string>
+</resources>
